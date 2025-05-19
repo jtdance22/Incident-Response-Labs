@@ -1,4 +1,6 @@
 
+<img width="400" src="https://github.com/user-attachments/assets/7eab7f34-ad1c-423d-93bb-3b66b8043ecb" alt="Atomic Red Team logo"/>
+
 # Incident Response Simulation (T1059 - Command and Scripting Interpreter)
 
 ## Description
