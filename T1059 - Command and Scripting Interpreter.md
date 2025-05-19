@@ -28,7 +28,7 @@
 
 ## Steps
 
-### 1. Prepare VM for attack
+### 1. Prepare VM for Attack
 - Create a Windows virtual machine (VM) in Azure with a public IP.
 - Disable the VM's firewall and configure the NSG to allow all inbound traffic
   ![image](https://github.com/user-attachments/assets/8d2efd9f-5134-4e4b-9bc9-a746f0eab8fe)
@@ -37,3 +37,55 @@
 - Download and install DeepBlueCLI and unzip - https://github.com/sans-blue-team/DeepBlueCLI
 - Download and install Git for Windows - https://git-scm.com/downloads/win
 
+### 2. Setup MDE To Detect the Attack
+#### Based on the behavior of the [AutoIt Script Execution](https://www.atomicredteam.io/atomic-red-team/atomics/T1059#atomic-test-1---autoit-script-execution) script, we know that this script is designed to do the following actions in our VM:
+- Check to see if AutoIt.exe is installed on the machine.
+- If AutoIt3.exe is NOT present, then it will silently download the program from this website via Powershell and install it into the machine: https://www.autoitscript.com/cgi-bin/getfile.pl?autoit3/autoit-v3-setup.exe
+- Once Autolt3.exe is installed, it will then run this program in combination with the malicious calc.au3 script found in the following directory: PathToAtomicsFolder\T1059\src\calc.au3
+- This will result in Windows Calculator being launched.
+#### Therefore, I will create the following MDE detection rules using KQL query language to alert when any of these steps are executed on the VM:
+#### Note: For each rule I created, I did the following in the setup process:
+- General: Add the correct MITRE category and technique + High Severity
+- Impacted Entities: DeviceName
+- Automated Actions: None
+
+#### Rule 1: Alert when AutoIt.exe is launched from a User, Temp or Downloads folder AND the command line runs the malicious calc.au3 script file:
+```kql
+DeviceProcessEvents
+| where DeviceName == "JD-win10"
+| where FileName =~ "AutoIt3.exe"
+| where ProcessCommandLine has_any (".au3", "calc.au3")
+| where FolderPath has_any ("Users", "Temp", "Downloads")
+```
+#### Rule 2: Alert when Autolt.exe launches calc.exe (this is an abnormal parent-child process relationship):
+```kql
+DeviceProcessEvents
+| where DeviceName == "JD-win10"
+| where InitiatingProcessFileName =~ "AutoIt3.exe"
+| where FileName =~ "calc.exe"
+```
+#### Rule 3: Alert when PowerShell is used to download something from the internet via the “Invoke-WebRequest” command:
+```kql
+DeviceProcessEvents
+| where DeviceName == "JD-win10"
+| where FileName =~ "powershell.exe"
+| where ProcessCommandLine has_any ("Invoke-WebRequest", "wget", "curl")
+| where ProcessCommandLine has "autoit" "getfile.pl"
+```
+#### Rule 4: Alert when Powershell is being used to install Autolt.exe (Powershell is not typically used to install programs like these in a normal enterprise environment):
+```kql
+DeviceFileEvents
+| where DeviceName == "JD-win10"
+| where FileName has "autoit" and FileName endswith ".exe"
+| where InitiatingProcessFileName =~ "powershell.exe"
+```
+#### Rule 5: Alert when non-standard scripting engines are found in the VM (like Autolt.exe, add others to the query, etc.). The “standard” scripting engines for Windows 10 are JScript and VBScript:
+```kql
+DeviceProcessEvents
+| where DeviceName == "JD-win10"
+| where FileName has_any ("AutoIt3.exe", "cscript.exe", "wscript.exe", "mshta.exe")
+| summarize count() by DeviceName, FileName, bin(Timestamp, 1d)
+| order by count_ desc
+```
+#### Screenshot of Rules
+![image](https://github.com/user-attachments/assets/d9a42627-ee74-4b21-bd6f-0e1b5cb2a3f1)
