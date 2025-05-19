@@ -17,3 +17,23 @@
 - Atomic Red Scripts
 - DeepBlueCLI
 - NIST 800-61 Incident Response
+
+## Table of Contents
+- Step 1 - Prepare Virtual Machine
+- Step 2 - Setup MDE to Detect Attack
+- Step 3 - Run Atomic Script
+- Step 4 - Review MDE Alerts Post-Attack
+- Step 5 - Detection and Analysis
+- Step 6 - Containment, Eradication, and Recovery
+
+## Steps
+
+### 1. Prepare VM for attack
+- Create a Windows virtual machine (VM) in Azure with a public IP.
+- Disable the VM's firewall and configure the NSG to allow all inbound traffic
+  ![image](https://github.com/user-attachments/assets/8d2efd9f-5134-4e4b-9bc9-a746f0eab8fe)
+- Onboard VM to Microsoft Defender for Endpoint (EDR)
+- Download and install Wireshark with default settings - https://www.wireshark.org/download.html
+- Download and install DeepBlueCLI and unzip - https://github.com/sans-blue-team/DeepBlueCLI
+- Download and install Git for Windows - https://git-scm.com/downloads/win
+
