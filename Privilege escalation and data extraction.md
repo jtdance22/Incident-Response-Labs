@@ -29,7 +29,7 @@ Below is the query that has created an incident. This is a scheduled query that 
 
 ### 1. Search for user permission changes.
 
-Since we were alerted that privileges may have been escalated on the server containing employee PII. We will use MS Defender for Endpoint to begin the investigation. We confirm with the following query and results. This is most likely a backdoor that the attacker has created.
+Since we were alerted that privileges may have been escalated on the server containing employee PII. We will use MS Defender for Endpoint to begin the investigation. We confirm with the following query and results. The command "usermod -aG" was used to escalate the user "badactor" into the sudo group, granting root privileges. This is most likely a backdoor that the attacker has created.
 
 ```kql
 DeviceFileEvents
@@ -62,3 +62,12 @@ Looking at the query results above, we see a suspicious looking shell script fil
 
 ![image](https://github.com/user-attachments/assets/915f2764-90d8-4ba9-adf7-bb951225d733)
 
+### 3. Searched the DeviceProcessEvents For Script Execution
+
+```kql
+DeviceProcessEvents
+| where Timestamp >= datetime(TIME_STAMP)
+| where DeviceName contains "VM_NAME"
+| project Timestamp, DeviceName, ActionType, InitiatingProcessCommandLine
+| order by Timestamp asc
+```
