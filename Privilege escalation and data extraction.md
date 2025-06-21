@@ -7,7 +7,7 @@ Once we have the lab setup and the script in place, we will observe the logs in 
 
 
 
-**Scenario**: A Company has been notfied that some of their employee PII data was posted on a reddit forum. The company believes this could be do to recent phishing attempts. Such information includes the employees home address, email address, and phone number. All of this information is stored on a linux server in a hidden file where only the root/sudo users have read and write access. There was also a report from an employee of a fellow co worker messing with an admins computer while they were in the bathroom. The company has decided to investigate this. 
+**Scenario**: A Company has been notfied that some of their employee PII data was posted on a reddit forum. At the same time, an alert for potential privilege escalation was generated in Microsoft Sentinel. All of the PII information is stored on a linux server in a hidden file where only the root/sudo users have read and write access. There was also a report from an employee of a fellow co worker messing with an admins computer while they were in the bathroom. The company has decided to investigate this. 
 
 ## Platforms and Languages Leveraged
 - Ubuntu Server 22.04 LTS
@@ -18,7 +18,17 @@ Once we have the lab setup and the script in place, we will observe the logs in 
 
 ---
 
+## Microsoft Sentinel Alert
+Below is the query that has created an incident.
+![image](https://github.com/user-attachments/assets/998dadb7-ff2e-43d4-ade4-b25801c73606)
+
+
+
 ## Steps Taken
+
+### 1. Search for user permission changes.
+
+Since we were alerted that privileges may have been escalated on the server containing employee PII
 
 ### 1. Searched the `DeviceFileEvents` Table
 
@@ -28,13 +38,14 @@ I used a query that searches for “FileCreated” Action type using the query b
 
 ```kql
 DeviceFileEvents
-| where DeviceName contains "VM_HOST_NAME"
+| where DeviceName contains "vm-linux-jd"
 | where ActionType == "FileCreated"
+| where Timestamp > ago(3d)
 | order by Timetamp desc
 ```
 ![image](https://github.com/user-attachments/assets/cc8dd264-ef00-4319-a97f-c9850b75878f)
 
-Looking at the query results above, we see a suspicious looking shell script file was created at 2025-06-21T21:48:16.642466Z. Upon expanding the record further, we can see the exact command that was used to create and edit the file.
+Looking at the query results above, we see a suspicious looking shell script file was created at 2025-06-21T21:48:16.642466Z. Upon inspecting the record further, we can see the exact command that was used to create and edit the file.
 
 ![image](https://github.com/user-attachments/assets/915f2764-90d8-4ba9-adf7-bb951225d733)
 
