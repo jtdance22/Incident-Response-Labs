@@ -30,4 +30,11 @@ I used a query that searches for “FileCreated” Action type using the query b
 DeviceFileEvents
 | where DeviceName contains "VM_HOST_NAME"
 | where ActionType == "FileCreated"
+| order by Timetamp desc
 ```
+![image](https://github.com/user-attachments/assets/cc8dd264-ef00-4319-a97f-c9850b75878f)
+
+Looking at the query results above, we see a suspicious looking shell script file was created at 2025-06-21T21:48:16.642466Z. Upon expanding the record further, we can see the exact command that was used to create and edit the file.
+
+![image](https://github.com/user-attachments/assets/915f2764-90d8-4ba9-adf7-bb951225d733)
+
