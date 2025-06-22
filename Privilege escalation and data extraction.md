@@ -62,12 +62,38 @@ Looking at the query results above, we see a suspicious looking shell script fil
 
 ![image](https://github.com/user-attachments/assets/915f2764-90d8-4ba9-adf7-bb951225d733)
 
-### 3. Searched the DeviceProcessEvents For Script Execution
+### 3. Searched the DeviceProcessEvents for Script Execution
+
+Since we have found a suspicious file, lets see if the attacker did indeed execute it.
 
 ```kql
 DeviceProcessEvents
-| where Timestamp >= datetime(TIME_STAMP)
-| where DeviceName contains "VM_NAME"
+| where Timestamp >= datetime(2025-06-21T21:48:16.642466Z)
+| where DeviceName contains "vm-linux-jd"
 | project Timestamp, DeviceName, ActionType, InitiatingProcessCommandLine
 | order by Timestamp asc
 ```
+The date above is used to narrow down the timespan after the secretscript.sh was created and ordered by ascending to see events immediately after the file creation. 
+
+![image](https://github.com/user-attachments/assets/3b2d9df8-ecb3-4cdf-96d6-5f7a78f8273f)
+
+As we can see from the logs, one of the first rows at 2025-06-21T21:49:03.612371Z has value “/bin/bash ./secretscript.sh” for the InitiatingProcessCommandLine column. /bin/bash indicates the interpreter that is used, which is bash, and the next part is “./secretscript.sh” which shows that the script was executed by the attacker. Shortly after, we see a bunch of commands that indicate some suspicious behavior involving using the Azure CLI. At 2025-06-21T21:49:03.616899Z, we see a command involving uploading to an Azure storage blob account (storage blob upload), using an account key and a storage account. We also checked for anything resembling the script self-deleting since an audit of the VM was done, and the exact file and its contents were not found, but could not find a record referring to this outcome in this table or the DeviceFileEvents table. 
+
+### 4. Looked at the DeviceNetworkEvents
+
+Using command:
+
+```kql
+DeviceNetworkEvents
+| where DeviceName contains "vm-linux-jd"
+| where Timestamp >= datetime(2025-06-21T21:49:03.616899Z)
+| project Timestamp, ActionType, InitiatingProcessCommandLine
+| order by Timestamp asc
+```
+
+![image](https://github.com/user-attachments/assets/d7016b56-a8d7-4919-8ff5-713846083ce6)
+
+We can see that we have a ConnectionRequest ActionType row involving Azure CLI blob storage, followed by a ConnectionSuccess row for the same request. When expanding the "ConnectionSuccess" record, we see the Azure CLI commands that were used in the suspicious script. The script connects to an Azure storage account and copies a file from the company's server. 
+
+![image](https://github.com/user-attachments/assets/98d46e60-05b6-465f-b0ba-e71bef1f1586)
+
