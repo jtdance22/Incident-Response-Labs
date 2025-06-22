@@ -97,3 +97,46 @@ We can see that we have a ConnectionRequest ActionType row involving Azure CLI b
 
 ![image](https://github.com/user-attachments/assets/98d46e60-05b6-465f-b0ba-e71bef1f1586)
 
+## Chronological Event Timeline 
+
+### 1. File creation - secretscript.sh
+
+- **Timestamp:** `2025-06-21T21:48:16.642466Z`
+- **Event:** The user creates a file called secretscript.sh through the nano command in Linux.
+- **Action:** Bash script file created and edited.
+- **File Path:** `/home/jdance/secretscript.sh`
+
+
+### 2. Process Execution - secretscript.sh execution
+
+- **Timestamp:** `2025-06-21T21:49:03.612371Z`
+- **Event:** The user executes the secretscript.sh.
+- **Action:** Process creation detected.
+- **File Path:** `/home/jdance/secretscript.sh`
+
+### 3. Escalation of privilege - making "badactor" a sudo user
+
+- **Timestamp:** `2025-06-21T21:49:03.604899Z`
+- **Event:** The script grants sudo access to john_smith user.
+- **Action:** Escalation of privilege.
+- **File Path:** `/home/jdance/secretscript.sh`
+
+### 4. Network Request to upload file to Azure Storage Account
+
+- **Timestamp:** `2025-06-16T12:23:19.007669Z`
+- **Event:** The script uploads file .my_secret_file.txt to Azure Storage account named storagejd2 through the Azure CLI. 
+- **Action:** Exfiltration of PII data.
+- **File Path:** `/home/jdance/.secret_data/.my_secret_file.txt`
+
+---
+
+## Summary
+
+An employee gained access to a root account on a server containing PII and installed a script. This script had 2 main functions. One function uploaded a file that contained the PII information to an Azure storage account. The second function of the script was to create a backdoor by escalating the privileges of  employee's account which would allow access to the data in the future. The script was then deleted. It was determined that this was an insider threat. 
+
+---
+
+## Response Taken
+
+The user account "badactor" was disabled. The user who left their laptop unlocked and unattended was forced to reset their password and undergo security training. This report was provided to the employee’s manager and upper management for further action.
+
